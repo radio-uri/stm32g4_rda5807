@@ -57,16 +57,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define btnMem_Pin GPIO_PIN_0
-#define btnMem_GPIO_Port GPIOA
-#define btnFdown_Pin GPIO_PIN_1
-#define btnFdown_GPIO_Port GPIOA
-#define btnFup_Pin GPIO_PIN_2
-#define btnFup_GPIO_Port GPIOA
-#define btnVdown_Pin GPIO_PIN_4
-#define btnVdown_GPIO_Port GPIOA
-#define btnVup_Pin GPIO_PIN_6
-#define btnVup_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

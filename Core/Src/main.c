@@ -18,7 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stm32g4xx_hal.h"
 #include "usb_device.h"
+#include "usbd_cdc_if.h"
+#include <math.h>
+#include <stdint.h>
+#include <sys/_intsup.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -32,6 +37,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BTN1 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)
+#define BTN2 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2)
+#define BTN3 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)
+#define BTN4 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_6)
+#define BTN5 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)
+
 
 /* USER CODE END PD */
 
@@ -59,7 +70,44 @@ static void MX_I2C3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void display_clear(uint8_t section){
+  uint8_t address[]= {0x68,0x6A,0x6C,0x6E};
+  uint8_t data = 0x00;
+  HAL_I2C_Master_Transmit(&hi2c1, address[section], &data, 1, 500);
+}
+void display_clear_all(){
+  for (uint8_t i=0;i<4;i++){
+    display_clear(i);
+  }
+}
 
+void display_digit(uint8_t section, uint8_t digit){
+  if (section > 3) return;
+  static uint8_t symbol[]={0x3f,0x06,0x5B,0x4F, 0x66, 0x6D, 0x7D,0x07, 0x7F, 0x6F};
+  static uint8_t address[]= {0x68,0x6A,0x6C,0x6E};
+  
+  HAL_I2C_Master_Transmit(&hi2c1, address[section], &symbol[digit], 1, 500);
+}
+
+void display_number(float_t num){
+  int base = (int)(num*10);
+  uint8_t digit[4];
+  digit[3]=(int)(base % 10);
+  digit[2]=(int)((base/10)%10);
+  digit[1]=(int)((base/100)%10);
+  digit[0]=(int)((base/1000)%10);
+  for (uint8_t i=0;i<4;i++){
+    if (digit[i]==0 && i==0) display_clear(i);
+    else display_digit(i, digit[i]);
+  }
+
+}
+
+
+/* activate and adjust display in the code */
+uint8_t set_display(uint8_t bright, _Bool on){
+  return  bright<<4|on;
+}
 /* USER CODE END 0 */
 
 /**
@@ -100,11 +148,47 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+
+  uint8_t displayCfg=0b00010001;
+  HAL_I2C_Master_Transmit(&hi2c1, 0x48, &displayCfg, 1, 500);
+  display_clear_all();
+  float_t frequency = 80.0;
+  uint8_t btn_press_counter=0;
+  _Bool seek_up, seek_down=0;
+  uint8_t seek_speed = 100;
+  display_number(frequency);
   while (1)
   {
+
+
+    if (BTN3) {
+      if (frequency<108.0) {
+        frequency+=0.1;
+        display_number(frequency);
+      }
+      if (btn_press_counter++ >5) seek_speed = 25;
+      else seek_speed=100;
+      HAL_Delay(seek_speed);
+
+
+    }
+    else if (BTN2) {
+      if (frequency>80.0) {
+        frequency-=0.1;
+        display_number(frequency);
+      }
+      if (btn_press_counter++ >5) seek_speed = 25;
+      else  seek_speed=100;
+      HAL_Delay(seek_speed);
+    }
+    else btn_press_counter=0;
+    
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    
+
   }
   /* USER CODE END 3 */
 }
@@ -271,10 +355,10 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : btnMem_Pin btnFdown_Pin btnFup_Pin btnVdown_Pin
-                           btnVup_Pin */
-  GPIO_InitStruct.Pin = btnMem_Pin|btnFdown_Pin|btnFup_Pin|btnVdown_Pin
-                          |btnVup_Pin;
+  /*Configure GPIO pins : PA0 PA1 PA2 PA4
+                           PA6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_4
+                          |GPIO_PIN_6;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
