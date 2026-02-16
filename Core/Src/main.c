@@ -24,6 +24,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <sys/_intsup.h>
+#include "tm1650_display.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -70,6 +71,7 @@ static void MX_I2C3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/*
 void display_clear(uint8_t section){
   uint8_t address[]= {0x68,0x6A,0x6C,0x6E};
   uint8_t data = 0x00;
@@ -102,7 +104,7 @@ void display_number(float_t num){
   }
 
 }
-
+*/
 
 /* activate and adjust display in the code */
 uint8_t set_display(uint8_t bright, _Bool on){
@@ -149,7 +151,7 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-
+  display_i2s_cfg(&hi2c1);
   uint8_t displayCfg=0b00010001;
   HAL_I2C_Master_Transmit(&hi2c1, 0x48, &displayCfg, 1, 500);
   display_clear_all();
