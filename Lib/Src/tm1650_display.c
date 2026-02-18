@@ -1,6 +1,8 @@
 #include <stdint.h>
+#include <math.h>
 #include "stm32g4xx_hal.h"
 #include "stm32g4xx_hal_i2c.h"
+#include "tm1650_display.h"
 
 I2C_HandleTypeDef *i2c_ptr;
 
@@ -40,5 +42,14 @@ void display_number(float_t num){
     if (digit[i]==0 && i==0) display_clear(i);
     else display_digit(i, digit[i]);
   }
+
+}
+
+/*
+*   Sets display brightness and switches ON/OFF
+*/
+void set_display(uint8_t brightness, _Bool onoff){
+  uint8_t data = brightness<<4|onoff;
+  HAL_I2C_Master_Transmit(i2c_ptr, 0x48, &data, 1, 500);
 
 }

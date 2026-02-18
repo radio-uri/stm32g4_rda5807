@@ -107,9 +107,7 @@ void display_number(float_t num){
 */
 
 /* activate and adjust display in the code */
-uint8_t set_display(uint8_t bright, _Bool on){
-  return  bright<<4|on;
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -152,12 +150,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 
   display_i2s_cfg(&hi2c1);
-  uint8_t displayCfg=0b00010001;
-  HAL_I2C_Master_Transmit(&hi2c1, 0x48, &displayCfg, 1, 500);
+  set_display(1, 1);
   display_clear_all();
   float_t frequency = 80.0;
   uint8_t btn_press_counter=0;
-  _Bool seek_up, seek_down=0;
   uint8_t seek_speed = 100;
   display_number(frequency);
   while (1)
