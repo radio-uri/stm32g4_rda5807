@@ -18,7 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "stm32g474xx.h"
 #include "stm32g4xx_hal.h"
+#include "stm32g4xx_hal_flash.h"
+#include "stm32g4xx_hal_flash_ex.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 #include <math.h>
@@ -43,7 +46,7 @@
 #define BTN3 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4)
 #define BTN4 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_6)
 #define BTN5 !HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1)
-
+#define DATA_ADDRESS 0x0807F800
 
 /* USER CODE END PD */
 
@@ -106,7 +109,47 @@ void display_number(float_t num){
 }
 */
 
-/* activate and adjust display in the code */
+uint32_t Flash_Write_Data (uint32_t PageAddress, uint64_t *Data)
+{
+
+	static FLASH_EraseInitTypeDef EraseInitStruct;
+	uint32_t PAGEError;
+
+
+	  /* Unlock the Flash to enable the flash control register access *************/
+	   HAL_FLASH_Unlock();
+
+	   /* Fill EraseInit structure*/
+	   EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
+	   EraseInitStruct.Page = 127;
+	   EraseInitStruct.NbPages = 1;
+
+	   if (HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError) != HAL_OK)
+	   {
+	     /*Error occurred while page erase.*/
+		  return HAL_FLASH_GetError ();
+	   }
+
+	   /* Program the user Flash area word by word*/
+
+
+	     if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, PageAddress, *Data) == HAL_OK)
+	     {
+
+	     }
+	     else
+	     {
+        HAL_FLASH_Lock();
+	       /* Error occurred while writing data in Flash memory*/
+	    	 return HAL_FLASH_GetError ();
+	     }
+
+	   /* Lock the Flash to disable the flash control register access (recommended
+	      to protect the FLASH memory against possible unwanted operation) *********/
+	   HAL_FLASH_Lock();
+
+	   return 0;
+}
 
 /* USER CODE END 0 */
 
@@ -156,9 +199,28 @@ int main(void)
   uint8_t btn_press_counter=0;
   uint8_t seek_speed = 100;
   display_number(frequency);
+  __IO uint64_t *data_ptr = (__IO uint64_t*)DATA_ADDRESS;
+
+
+
   while (1)
   {
 
+
+    if(BTN1) {
+
+      uint64_t data_buf = *data_ptr;
+      CDC_Transmit_FS((uint8_t*)&data_buf, 8);
+      HAL_Delay(300);
+      
+    }
+
+
+    if (BTN5){
+      uint64_t data_temp = 0x54658765;
+      uint32_t fb = Flash_Write_Data(DATA_ADDRESS, &data_temp);
+      CDC_Transmit_FS(&fb, 4);
+    }
 
     if (BTN3) {
       if (frequency<108.0) {
