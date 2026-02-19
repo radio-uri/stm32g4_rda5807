@@ -27,8 +27,11 @@ void display_digit(uint8_t section, uint8_t digit){
   if (section > 3) return;
   static uint8_t symbol[]={0x3f,0x06,0x5B,0x4F, 0x66, 0x6D, 0x7D,0x07, 0x7F, 0x6F};
   static uint8_t address[]= {0x68,0x6A,0x6C,0x6E};
-  
-  HAL_I2C_Master_Transmit(i2c_ptr, address[section], &symbol[digit], 1, 500);
+  uint8_t output_symbol = symbol[digit];
+  if (section==2){
+    output_symbol |= 0b10000000;
+  }
+  HAL_I2C_Master_Transmit(i2c_ptr, address[section], &output_symbol, 1, 500);
 }
 
 void display_number(float_t num){
