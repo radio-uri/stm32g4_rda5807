@@ -49,7 +49,10 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Custom libraries
 
 set(LIB_H Lib/Inc)
-set(LIB_C Lib/Src/tm1650_display.c)
+set(LIB_C   Lib/Src/tm1650_display.c 
+            Lib/Src/flash_ops.c
+    )
+
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE

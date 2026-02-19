@@ -20,14 +20,12 @@
 #include "main.h"
 #include "stm32g474xx.h"
 #include "stm32g4xx_hal.h"
-#include "stm32g4xx_hal_flash.h"
-#include "stm32g4xx_hal_flash_ex.h"
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 #include <math.h>
 #include <stdint.h>
-#include <sys/_intsup.h>
 #include "tm1650_display.h"
+#include "flash_ops.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -109,47 +107,6 @@ void display_number(float_t num){
 }
 */
 
-uint32_t Flash_Write_Data (uint32_t PageAddress, uint64_t *Data)
-{
-
-	static FLASH_EraseInitTypeDef EraseInitStruct;
-	uint32_t PAGEError;
-
-
-	  /* Unlock the Flash to enable the flash control register access *************/
-	   HAL_FLASH_Unlock();
-
-	   /* Fill EraseInit structure*/
-	   EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-	   EraseInitStruct.Page = 127;
-	   EraseInitStruct.NbPages = 1;
-
-	   if (HAL_FLASHEx_Erase(&EraseInitStruct, &PAGEError) != HAL_OK)
-	   {
-	     /*Error occurred while page erase.*/
-		  return HAL_FLASH_GetError ();
-	   }
-
-	   /* Program the user Flash area word by word*/
-
-
-	     if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, PageAddress, *Data) == HAL_OK)
-	     {
-
-	     }
-	     else
-	     {
-        HAL_FLASH_Lock();
-	       /* Error occurred while writing data in Flash memory*/
-	    	 return HAL_FLASH_GetError ();
-	     }
-
-	   /* Lock the Flash to disable the flash control register access (recommended
-	      to protect the FLASH memory against possible unwanted operation) *********/
-	   HAL_FLASH_Lock();
-
-	   return 0;
-}
 
 /* USER CODE END 0 */
 
