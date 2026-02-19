@@ -24,6 +24,8 @@
 #include "usbd_cdc_if.h"
 #include <math.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <sys/_intsup.h>
 #include "tm1650_display.h"
 #include "flash_ops.h"
 
@@ -72,40 +74,7 @@ static void MX_I2C3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/*
-void display_clear(uint8_t section){
-  uint8_t address[]= {0x68,0x6A,0x6C,0x6E};
-  uint8_t data = 0x00;
-  HAL_I2C_Master_Transmit(&hi2c1, address[section], &data, 1, 500);
-}
-void display_clear_all(){
-  for (uint8_t i=0;i<4;i++){
-    display_clear(i);
-  }
-}
 
-void display_digit(uint8_t section, uint8_t digit){
-  if (section > 3) return;
-  static uint8_t symbol[]={0x3f,0x06,0x5B,0x4F, 0x66, 0x6D, 0x7D,0x07, 0x7F, 0x6F};
-  static uint8_t address[]= {0x68,0x6A,0x6C,0x6E};
-  
-  HAL_I2C_Master_Transmit(&hi2c1, address[section], &symbol[digit], 1, 500);
-}
-
-void display_number(float_t num){
-  int base = (int)(num*10);
-  uint8_t digit[4];
-  digit[3]=(int)(base % 10);
-  digit[2]=(int)((base/10)%10);
-  digit[1]=(int)((base/100)%10);
-  digit[0]=(int)((base/1000)%10);
-  for (uint8_t i=0;i<4;i++){
-    if (digit[i]==0 && i==0) display_clear(i);
-    else display_digit(i, digit[i]);
-  }
-
-}
-*/
 
 
 /* USER CODE END 0 */
@@ -119,6 +88,7 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -127,7 +97,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  HAL_Delay(500);  // Without this MCU does not restart after power cycle.
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -155,31 +125,34 @@ int main(void)
   float_t frequency = 80.0;
   uint8_t btn_press_counter=0;
   uint8_t seek_speed = 100;
+  
+
+  frequency = Get_stored_float(DATA_ADDRESS);
   display_number(frequency);
-  __IO uint64_t *data_ptr = (__IO uint64_t*)DATA_ADDRESS;
-
-
 
   while (1)
   {
 
 
     if(BTN1) {
-
-      uint64_t data_buf = *data_ptr;
-      CDC_Transmit_FS((uint8_t*)&data_buf, 8);
-      HAL_Delay(300);
       
+      if (btn_press_counter++ ==5) {
+        Flash_Write_Data(DATA_ADDRESS, (uint64_t*)&frequency);
+        uint8_t brignhtness = 1;
+        for (uint8_t i=0;i<4;i++){
+          brignhtness = !brignhtness;
+          set_display(brignhtness, 1);
+          HAL_Delay(200);
+        }
+        //set_display(1, 1);
+      }
+        
+
+      HAL_Delay(300);
     }
 
 
-    if (BTN5){
-      uint64_t data_temp = 0x54658765;
-      uint32_t fb = Flash_Write_Data(DATA_ADDRESS, &data_temp);
-      CDC_Transmit_FS(&fb, 4);
-    }
-
-    if (BTN3) {
+    else if (BTN3) {
       if (frequency<108.0) {
         frequency+=0.1;
         display_number(frequency);

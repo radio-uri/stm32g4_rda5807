@@ -3,6 +3,7 @@
 #include "stm32g4xx_hal_flash.h"
 #include "stm32g4xx_hal_flash_ex.h"
 #include <stdint.h>
+#include <math.h>
 #include "flash_ops.h"
 
 
@@ -42,4 +43,10 @@ uint32_t Flash_Write_Data (uint32_t PageAddress, uint64_t *Data)
     HAL_FLASH_Lock();
 
     return Error_msg;
+}
+
+float_t Get_stored_float(uint64_t address){
+
+  uint64_t val = *(__IO uint64_t*)address;
+  return *(float_t*)&val;
 }

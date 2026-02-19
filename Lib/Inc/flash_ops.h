@@ -3,6 +3,7 @@
 
 
 uint32_t Flash_Write_Data (uint32_t PageAddress, uint64_t *Data);
+float_t Get_stored_float(uint64_t address);
 
 
 
