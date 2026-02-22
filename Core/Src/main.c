@@ -28,6 +28,7 @@
 #include <sys/_intsup.h>
 #include "tm1650_display.h"
 #include "flash_ops.h"
+#include "rda5807.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

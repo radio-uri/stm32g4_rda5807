@@ -51,6 +51,7 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 set(LIB_H Lib/Inc)
 set(LIB_C   Lib/Src/tm1650_display.c 
             Lib/Src/flash_ops.c
+            Lib/Src/rda5807.c
     )
 
 
